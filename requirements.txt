@@ -1,0 +1,9 @@
+numpy
+scipy
+networkx
+pandas
+h5py
+matplotlib
+plotly
+pyvista
+numba
