@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "QaetherStateMetadata",
+  "type": "object",
+  "properties": {
+    "N": { "type": "integer" },
+    "seed": { "type": "integer" },
+    "phi": { "type": "number" },
+    "compression_protocol": { "type": "string" },
+    "phi_target": { "type": "number" },
+    "phi_achieved": { "type": "number" },
+    "max_overlap": { "type": "number" },
+    "mean_overlap": { "type": "number" },
+    "overlap_energy_per_vertex": { "type": "number" },
+    "fraction_overlapping_pairs": { "type": "number" },
+    "force_model": { "type": "string" },
+    "epsilon_contact": { "type": "number" },
+    "epsilon_cycle": { "type": "number" },
+    "epsilon_motif": { "type": "number" },
+    "epsilon_contact_on": { "type": "number" },
+    "epsilon_contact_off": { "type": "number" },
+    "contact_rule": { "type": "string" },
+    "phase_enabled": { "type": "boolean" },
+    "lambda_phase": { "type": "number" },
+    "phase_seed": { "type": "integer" },
+    "omega_q": { "type": "number" },
+    "perturbation_enabled": { "type": "boolean" },
+    "perturbation_amplitude": { "type": "number" },
+    "perturbation_seed": { "type": "integer" },
+    "dynamics_type": {
+      "type": "string",
+      "enum": ["A. Residual-stress relaxation", "B. Perturbation-response", "none"]
+    },
+    "kind": { "type": "string" },
+    "stage": { "type": "string" },
+    "state_label": {
+      "type": "string",
+      "enum": ["hard_sphere_like", "soft_overcompressed_or_stressed"]
+    }
+  },
+  "additionalProperties": true
+}

@@ -21,33 +21,58 @@ def random_gas(n: int, phi: float, seed: int, radius: float = 0.5, ell_q: float 
     )
 
 
+def _find_grid_dimensions(n_target: int, cell_size: int = 4):
+    if n_target <= 0 or n_target % cell_size != 0:
+        raise ValueError(f"lattice size N must be a positive multiple of {cell_size}")
+
+    cell_count = n_target // cell_size
+    candidates = []
+    for nx in range(1, cell_count + 1):
+        if cell_count % nx:
+            continue
+        remaining = cell_count // nx
+        for ny in range(1, remaining + 1):
+            if remaining % ny:
+                continue
+            nz = remaining // ny
+            dims = tuple(sorted((nx, ny, nz), reverse=True))
+            candidates.append((dims[0] / dims[-1], dims))
+    return min(candidates)[1]
+
+
 def fcc_lattice(n: int, phi: float, radius: float = 0.5, ell_q: float = 1.0) -> QaetherState:
+    """
+    Construct FCC lattice using an orthogonal 4-particle unit cell basis, scaled to target phi.
+    If nearest-neighbor distance a_nn is used:
+    lattice constant a = sqrt(2) * a_nn
+    box = [nx * a, ny * a, nz * a]
+    """
+    # Orthogonal basis coordinates normalized to [0, 1) unit box
     basis = np.array(
         [[0.0, 0.0, 0.0], [0.0, 0.5, 0.5], [0.5, 0.0, 0.5], [0.5, 0.5, 0.0]],
         dtype=float,
     )
-    cells = int(np.ceil((n / 4.0) ** (1.0 / 3.0)))
+    nx, ny, nz = _find_grid_dimensions(n)
+
+    sphere_volume = 4.0 * np.pi * radius**3 / 3.0
+    a = (4.0 * sphere_volume / phi) ** (1.0 / 3.0)
+
     pts = []
-    for i in range(cells):
-        for j in range(cells):
-            for k in range(cells):
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
                 for b in basis:
-                    pts.append(np.array([i, j, k], dtype=float) + b)
-                    if len(pts) == n:
-                        break
-                if len(pts) == n:
-                    break
-            if len(pts) == n:
-                break
-        if len(pts) == n:
-            break
+                    pt = (np.array([i, j, k], dtype=float) + b) * a
+                    pts.append(pt)
     pts = np.asarray(pts)
-    length = packing_box_length(n, radius, phi)
-    pts = pts / cells * length
+    if len(pts) != n:
+        raise RuntimeError("FCC replication did not generate exactly N vertices")
+    box = np.array([nx * a, ny * a, nz * a], dtype=float)
+
     return QaetherState(
         positions=pts,
         velocities=np.zeros((n, 3), dtype=float),
-        box=np.array([length, length, length], dtype=float),
+        box=box,
         radius=radius,
         ell_q=ell_q,
         metadata={"kind": "fcc", "phi": phi},
@@ -55,31 +80,47 @@ def fcc_lattice(n: int, phi: float, radius: float = 0.5, ell_q: float = 1.0) -> 
 
 
 def hcp_lattice(n: int, phi: float, radius: float = 0.5, ell_q: float = 1.0) -> QaetherState:
-    # Compact periodic proxy: AB layers with triangular in-plane offsets, rescaled to target phi.
-    rows = int(np.ceil(n ** (1.0 / 3.0))) + 1
+    """
+    Construct HCP lattice using an orthogonal 4-particle unit cell basis, scaled to target phi.
+    Periodicity scale: [a, a * sqrt(3), a * sqrt(8/3)]
+    """
+    # Relative basis positions normalized to [1.0, 1.0, 1.0] relative periodic dimensions
+    basis = np.array([
+        [0.0, 0.0, 0.0],
+        [0.5, 0.5, 0.0],
+        [0.0, 1.0/3.0, 0.5],
+        [0.5, 5.0/6.0, 0.5]
+    ], dtype=float)
+
+    nx, ny, nz = _find_grid_dimensions(n)
+
+    # Unit dimensions proportions: [1, sqrt(3), sqrt(8/3)]
+    aspect_x = 1.0
+    aspect_y = np.sqrt(3.0)
+    aspect_z = np.sqrt(8.0 / 3.0)
+
+    sphere_volume = 4.0 * np.pi * radius**3 / 3.0
+    cell_aspect_volume = aspect_x * aspect_y * aspect_z
+    a = (4.0 * sphere_volume / (phi * cell_aspect_volume)) ** (1.0 / 3.0)
+
+    scale_vector = np.array([a * aspect_x, a * aspect_y, a * aspect_z], dtype=float)
+
     pts = []
-    dz = np.sqrt(2.0 / 3.0)
-    for k in range(rows):
-        layer_offset = np.array([0.5, np.sqrt(3.0) / 6.0, 0.0]) if k % 2 else np.zeros(3)
-        for j in range(rows):
-            for i in range(rows):
-                p = np.array([i + 0.5 * (j % 2), j * np.sqrt(3.0) / 2.0, k * dz]) + layer_offset
-                pts.append(p)
-                if len(pts) == n:
-                    break
-            if len(pts) == n:
-                break
-        if len(pts) == n:
-            break
+    for i in range(nx):
+        for j in range(ny):
+            for k in range(nz):
+                for b in basis:
+                    pt = (np.array([i, j, k], dtype=float) + b) * scale_vector
+                    pts.append(pt)
     pts = np.asarray(pts)
-    mins = pts.min(axis=0)
-    spans = pts.max(axis=0) - mins + 1.0
-    length = packing_box_length(n, radius, phi)
-    pts = (pts - mins) / spans.max() * length
+    if len(pts) != n:
+        raise RuntimeError("HCP replication did not generate exactly N vertices")
+    box = scale_vector * np.array([nx, ny, nz], dtype=float)
+
     return QaetherState(
         positions=pts,
         velocities=np.zeros((n, 3), dtype=float),
-        box=np.array([length, length, length], dtype=float),
+        box=box,
         radius=radius,
         ell_q=ell_q,
         metadata={"kind": "hcp", "phi": phi},

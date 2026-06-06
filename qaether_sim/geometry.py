@@ -36,14 +36,15 @@ def centered_points(indices, positions: np.ndarray, box: np.ndarray) -> np.ndarr
 
 
 def overlap_metrics(state) -> dict:
+    numerical_tolerance = 1.0e-12
     overlaps = []
     overlapping_pairs = 0
     pair_count = state.n * (state.n - 1) // 2
     for i in range(state.n - 1):
         for j in range(i + 1, state.n):
             d = distance(state.positions, i, j, state.box)
-            overlap = max(0.0, state.ell_q - d)
-            if overlap > 0.0:
+            overlap = state.ell_q - d
+            if overlap > numerical_tolerance:
                 overlapping_pairs += 1
                 overlaps.append(overlap)
     if overlaps:

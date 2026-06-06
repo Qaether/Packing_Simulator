@@ -9,8 +9,7 @@ from .motifs_T import detect_t_motifs
 from .geometry import overlap_metrics
 
 
-def analyze_snapshot(phi, state, cfg):
-    graph = build_contact_graph(state, cfg.epsilon_contact)
+def analyze_graph(phi, state, cfg, graph):
     triangles = primitive_triangles(graph, state, cfg.epsilon_cycle)
     squares = primitive_squares(graph, state, cfg.epsilon_cycle, cfg.epsilon_planar)
     t_motifs = detect_t_motifs(graph, state, triangles, cfg.epsilon_cycle, cfg.epsilon_volume)
@@ -37,6 +36,11 @@ def analyze_snapshot(phi, state, cfg):
         "o_motifs": o_motifs,
         "summary": summary,
     }
+
+
+def analyze_snapshot(phi, state, cfg):
+    graph = build_contact_graph(state, cfg.epsilon_contact)
+    return analyze_graph(phi, state, cfg, graph)
 
 
 def build_atlas(snapshots, cfg):

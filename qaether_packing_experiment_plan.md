@@ -50,14 +50,14 @@ Execution phases:
 
 Mark a stage complete only when required outputs exist and smoke/validation checks pass.
 
-- [ ] Stage 0: freeze definitions, protocols, state/config/HDF5/metadata schema
-- [ ] Stage 1: implement initial condition generation
-- [ ] Stage 2: run packing-ratio sweep periodic compression
-- [ ] Stage 3: build spatial contact graph atlas and classify jamming/frustration
-- [ ] Stage 4: detect primitive triangle/square cycles
-- [ ] Stage 5: detect T/O motifs
-- [ ] Stage 6: build compression graph/cycle/motif atlas
-- [ ] Stage 7: select representative states and HCP/FCC benchmarks
+- [x] Stage 0: freeze definitions, protocols, state/config/HDF5/metadata schema
+- [x] Stage 1: implement initial condition generation
+- [x] Stage 2: run packing-ratio sweep periodic compression
+- [x] Stage 3: build spatial contact graph atlas and classify jamming/frustration
+- [x] Stage 4: detect primitive triangle/square cycles
+- [x] Stage 5: detect T/O motifs
+- [x] Stage 6: build compression graph/cycle/motif atlas
+- [x] Stage 7: select representative states and HCP/FCC benchmarks
 - [ ] Stage 8: run pressure-off exclusion-only dynamics and time-series analysis
 - [ ] Stage 9: run quaternion phase coupling and lambda/phase-seed sweep
 - [ ] Stage 10: run pre-pressure-off small-vibration perturbation sweep
@@ -76,6 +76,23 @@ Progress rules:
 - Keep the Korean and English plan files synchronized.
 - Do not mark a stage complete without outputs and validation.
 - Store random-compressed, jammed/frustrated, HCP, FCC, perturbed, and phase-conditioned results under separate labels.
+
+Phase A execution record:
+
+- 2026-06-06: completed Stages 0-7 with `N=64`, seeds `0,1,2`, and 15 `phi_target` values
+- Output directory: `results_phase_a_N64`
+- Compression relaxation: `relax_dt=0.2` separated from the dynamics timestep, up to 3000 steps with early convergence
+- No Stage 8+ dynamics, phase, or perturbation outputs were generated
+
+Correctness gates:
+
+- A zero-pressure, zero-energy, contact-free state must be classified as `flowing`, never jammed or frustrated.
+- Wrapped coordinate differences must not be used directly for MSD; use minimum-image increments or an unwrapped trajectory.
+- FCC/HCP benchmarks must contain complete periodic unit cells. For the current four-site orthorhombic cells, `N` must be divisible by four and the replicated cell count must equal `N / 4` exactly.
+- A lattice may be labeled `toto_valid=true` only after both the hard-sphere overlap check and the same T/O detector used for experimental states pass.
+- Dynamic edges, cycles, and motifs at one time point must all be evaluated from the same hysteretic contact graph.
+- If the initial edge or motif set is empty, its survival quotient is undefined and must be stored as `NaN` together with the initial count. It must not be reported as zero or one.
+- A smoke run verifies execution and invariants only. It does not authorize production-scale or publication-level interpretation.
 
 ## 1. Recommended Python Stack
 
@@ -356,6 +373,7 @@ HCP/FCC benchmark rules:
 
 - Separate ideal close-packing benchmarks from target-phi constructed benchmarks.
 - Generate with the same `N` and periodic cell convention, while recording `phi_target` and `phi_achieved/contact scale` separately.
+- Reject incompatible `N` rather than truncating a periodic lattice or shrinking a partially filled box.
 - Run the same contact graph, primitive cycle, and T/O motif pipeline.
 
 Outputs:
@@ -371,7 +389,9 @@ Purpose:
 
 - Starting from selected states and HCP/FCC states, remove external pressure/compression and observe motion driven only by exclusion.
 - The central observable is graph/motif response: contact survival, graph edit distance, cycle/motif birth-death, and T/O survival.
-- If the initial state has no overlap and no velocity, label the run as perturbation response; otherwise label it residual-stress relaxation.
+- Label a run `A. Residual-stress relaxation` only when initial overlap/stress is present.
+- Label a run `B. Perturbation-response` only when the initial state is hard-sphere-like and an explicit perturbation was applied.
+- Label an unforced, non-overlapping, unperturbed run `none`; scalar phase assignment alone is not a perturbation when no exclusion force is active.
 
 Baseline dynamics:
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import List
+from typing import List, Optional
 
 
 @dataclass
@@ -11,7 +11,12 @@ class ExperimentConfig:
     k_core: float = 1.0
     damping: float = 1.0
     dt: float = 0.01
+    relax_dt: Optional[float] = None
     relax_steps: int = 80
+    relax_min_steps: int = 20
+    relax_convergence_window: int = 10
+    relax_msd_tolerance: float = 1.0e-14
+    relax_force_tolerance: float = 1.0e-6
     dynamics_steps: int = 120
     snapshot_stride: int = 10
     epsilon_contact: float = 0.06

@@ -50,14 +50,14 @@ Production geometry:
 
 각 stage가 끝날 때마다 required output과 smoke/validation check가 있을 때만 완료 처리한다.
 
-- [ ] Stage 0: 정의, protocol, state/config/HDF5/metadata schema 고정
-- [ ] Stage 1: 초기 조건 생성기 구현
-- [ ] Stage 2: packing-ratio sweep periodic compression 실행
-- [ ] Stage 3: spatial contact graph atlas 및 jamming/frustration 판정
-- [ ] Stage 4: primitive triangle/square cycle 검출
-- [ ] Stage 5: T/O motif 검출
-- [ ] Stage 6: compression graph/cycle/motif atlas 생성
-- [ ] Stage 7: representative state 및 HCP/FCC benchmark 선정
+- [x] Stage 0: 정의, protocol, state/config/HDF5/metadata schema 고정
+- [x] Stage 1: 초기 조건 생성기 구현
+- [x] Stage 2: packing-ratio sweep periodic compression 실행
+- [x] Stage 3: spatial contact graph atlas 및 jamming/frustration 판정
+- [x] Stage 4: primitive triangle/square cycle 검출
+- [x] Stage 5: T/O motif 검출
+- [x] Stage 6: compression graph/cycle/motif atlas 생성
+- [x] Stage 7: representative state 및 HCP/FCC benchmark 선정
 - [ ] Stage 8: pressure-off exclusion-only dynamics 및 time series 분석
 - [ ] Stage 9: quaternion phase coupling 및 lambda/phase-seed sweep
 - [ ] Stage 10: pressure-off 전 small-vibration perturbation sweep
@@ -76,6 +76,23 @@ Production geometry:
 - 한글/영문 plan 파일을 항상 같이 업데이트한다.
 - 완료 결과 없이 stage를 완료 처리하지 않는다.
 - random-compressed, jammed/frustrated, HCP, FCC, perturbed, phase-conditioned 결과는 반드시 별도 라벨로 저장한다.
+
+Phase A 실행 기록:
+
+- 2026-06-06: `N=64`, seeds `0,1,2`, 15개 `phi_target`으로 Stage 0-7 완료
+- 결과 디렉터리: `results_phase_a_N64`
+- compression relaxation: dynamics timestep과 분리된 `relax_dt=0.2`, 최대 3000 step, 수렴 시 조기 종료
+- Stage 8 이후 dynamics/phase/perturbation 산출물은 생성하지 않음
+
+정합성 통과 조건:
+
+- 압력, 에너지, 접촉이 모두 0인 상태는 반드시 `flowing`이어야 하며 jammed/frustrated로 판정하면 안 된다.
+- wrapped 좌표를 직접 빼서 MSD를 계산하지 않는다. minimum-image increment 또는 unwrapped trajectory를 사용한다.
+- FCC/HCP benchmark는 완전한 periodic unit cell만 복제한다. 현재 4-site orthorhombic cell에서는 `N`이 4의 배수이고 복제 cell 수가 정확히 `N / 4`여야 한다.
+- lattice의 `toto_valid=true`는 hard-sphere overlap 검사와 실험 상태에 사용하는 동일한 T/O detector를 모두 통과한 뒤에만 부여한다.
+- 동일 시점의 dynamic edge, cycle, motif는 모두 동일한 hysteretic contact graph에서 계산한다.
+- 초기 edge/motif 집합이 비어 있으면 survival quotient는 정의되지 않으므로 초기 개수와 함께 `NaN`으로 저장한다. 0 또는 1로 기록하지 않는다.
+- smoke run은 실행 가능성과 invariant만 검증하며 production 또는 논문 수준 해석을 승인하지 않는다.
 
 ## 1. 추천 Python 라이브러리
 
@@ -357,6 +374,7 @@ HCP/FCC benchmark 조건:
 
 - ideal close-packing benchmark와 target-phi constructed benchmark를 분리한다.
 - 동일 `N`, 동일 periodic cell convention으로 생성하되, `phi_target`과 `phi_achieved/contact scale`을 별도 기록한다.
+- periodic lattice를 절단하거나 일부만 채운 box를 축소하지 말고, 호환되지 않는 `N`은 명시적으로 거부한다.
 - contact graph, primitive cycle, T/O motif를 같은 pipeline으로 검출한다.
 
 산출물:
@@ -372,7 +390,9 @@ HCP/FCC benchmark 조건:
 
 - 앞서 선택한 state와 HCP/FCC state에서 외부 압축/압력을 제거했을 때 배제력만으로 어떤 움직임이 나오는지 본다.
 - 중심 질문은 "얼마나 움직였는가"가 아니라 공간 그래프, cycle, T/O motif가 유지/전환되는가이다.
-- strictly non-overlapping, velocity-free 상태에서는 pure exclusion만으로 trivial dynamics가 되므로 residual overlap/stress가 있으면 stress relaxation, 없으면 small perturbation response protocol로 라벨링한다.
+- 초기 overlap/stress가 있을 때만 `A. Residual-stress relaxation`으로 라벨링한다.
+- hard-sphere-like 초기 상태에 명시적 perturbation이 적용된 경우만 `B. Perturbation-response`로 라벨링한다.
+- non-overlapping, unperturbed, unforced run은 `none`으로 라벨링한다. exclusion force가 없는 상태에서 scalar phase 할당만으로는 perturbation이 아니다.
 
 baseline dynamics:
 
