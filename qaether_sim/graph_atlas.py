@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from .contact_graph import build_contact_graph, graph_summary
+from .contact_graph import build_contact_graph, cycle_node_set, graph_summary
 from .cycles import primitive_squares, primitive_triangles
 from .motifs_O import detect_o_motifs
 from .motifs_T import detect_t_motifs
@@ -14,6 +14,10 @@ def analyze_graph(phi, state, cfg, graph):
     squares = primitive_squares(graph, state, cfg.epsilon_cycle, cfg.epsilon_planar)
     t_motifs = detect_t_motifs(graph, state, triangles, cfg.epsilon_cycle, cfg.epsilon_volume)
     o_motifs = detect_o_motifs(graph, state, triangles, squares, cfg.epsilon_center, cfg.epsilon_perp)
+    t_motif_nodes = {node for motif in t_motifs for node in motif}
+    o_motif_nodes = {node for motif in o_motifs for node in motif}
+    motif_nodes = t_motif_nodes | o_motif_nodes
+    cycle_nodes = cycle_node_set(graph)
     summary = graph_summary(graph)
     summary.update(
         {
@@ -25,6 +29,10 @@ def analyze_graph(phi, state, cfg, graph):
             "o_motifs": len(o_motifs),
             "t_density": len(t_motifs) / max(state.n, 1),
             "o_density": len(o_motifs) / max(state.n, 1),
+            "t_motif_nodes": len(t_motif_nodes),
+            "o_motif_nodes": len(o_motif_nodes),
+            "t_or_o_motif_nodes": len(motif_nodes),
+            "non_t_o_cycle_nodes": len(cycle_nodes - motif_nodes),
             **overlap_metrics(state),
         }
     )

@@ -83,6 +83,10 @@ Phase A 실행 기록:
 - 결과 디렉터리: `results_phase_a_N64`
 - compression relaxation: dynamics timestep과 분리된 `relax_dt=0.2`, 최대 3000 step, 수렴 시 조기 종료
 - Stage 8 이후 dynamics/phase/perturbation 산출물은 생성하지 않음
+- 2026-06-06 scaling 확장: `N=128`, seeds `0,1,2`, 동일한 15개 `phi_target`으로 Stage 0-7 반복
+- scaling 결과 디렉터리: `results_phase_a_N128`
+- 구조 산출물: 각 결과 디렉터리의 `structure_topology_by_phi.csv`, `structure_topology_summary_by_phi.csv`
+- 크기 비교 산출물: `structure_topology_scaling_N64_N128.csv`, `structure_topology_scaling_N64_N128.md`
 
 정합성 통과 조건:
 

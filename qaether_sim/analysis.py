@@ -6,10 +6,12 @@ import shutil
 from typing import List
 
 import pandas as pd
+import networkx as nx
 
 from .bulk_dynamics import pressure_off_dynamics
 from .compression import compression_sweep
 from .config import ExperimentConfig
+from .contact_graph import cycle_node_set, graph_summary
 from .graph_atlas import analyze_snapshot, build_atlas
 from .initial_conditions import random_gas
 from .jamming import classify_compression_trace
@@ -81,6 +83,71 @@ def refresh_state_selection(out_dir: str) -> None:
             for row in seed_df.itertuples()
         }
         _write_state_selection(seed_dir, snapshots, seed_df)
+
+
+def refresh_structure_topology(out_dir: str) -> None:
+    raw_rows = []
+    seed_dirs = sorted(
+        path for path in os.listdir(out_dir)
+        if path.startswith("seed_") and os.path.isdir(os.path.join(out_dir, path))
+    )
+    for seed_name in seed_dirs:
+        seed = int(seed_name.split("_", 1)[1])
+        seed_dir = os.path.join(out_dir, seed_name)
+        atlas_path = os.path.join(seed_dir, "compression_graph_motif_atlas.csv")
+        atlas_df = pd.read_csv(atlas_path)
+        for row_index, row in atlas_df.iterrows():
+            phi = float(row["phi"])
+            edge_path = os.path.join(seed_dir, f"graph_edges_phi_{phi:.3f}.csv")
+            edge_df = pd.read_csv(edge_path)
+            graph = nx.Graph()
+            graph.add_nodes_from(range(int(row["nodes"])))
+            graph.add_edges_from(edge_df.itertuples(index=False, name=None))
+            topology = graph_summary(graph)
+            t_path = os.path.join(seed_dir, f"T_motifs_phi_{phi:.3f}.csv")
+            o_path = os.path.join(seed_dir, f"O_motifs_phi_{phi:.3f}.csv")
+            t_df = pd.read_csv(t_path)
+            o_df = pd.read_csv(o_path)
+            t_nodes = set(t_df.to_numpy().ravel().tolist()) if not t_df.empty else set()
+            o_nodes = set(o_df.to_numpy().ravel().tolist()) if not o_df.empty else set()
+            motif_nodes = t_nodes | o_nodes
+            topology.update(
+                {
+                    "t_motif_nodes": len(t_nodes),
+                    "o_motif_nodes": len(o_nodes),
+                    "t_or_o_motif_nodes": len(motif_nodes),
+                    "non_t_o_cycle_nodes": len(cycle_node_set(graph) - motif_nodes),
+                }
+            )
+            for key, value in topology.items():
+                atlas_df.loc[row_index, key] = value
+            raw_rows.append({"seed": seed, "phi": phi, **topology})
+        atlas_df.to_csv(atlas_path, index=False)
+
+    raw_df = pd.DataFrame(raw_rows).sort_values(["seed", "phi"]).reset_index(drop=True)
+    raw_df.to_csv(os.path.join(out_dir, "structure_topology_by_phi.csv"), index=False)
+    metric_columns = [
+        "isolated_nodes",
+        "degree1_nodes",
+        "degree2_nodes",
+        "low_degree_0_2_nodes",
+        "bridge_edges",
+        "cycle_nodes",
+        "noncycle_nodes",
+        "chain_components",
+        "tree_components",
+        "components",
+        "t_motif_nodes",
+        "o_motif_nodes",
+        "t_or_o_motif_nodes",
+        "non_t_o_cycle_nodes",
+    ]
+    summary = raw_df.groupby("phi")[metric_columns].agg(["mean", "min", "max"])
+    summary.columns = [f"{metric}_{stat}" for metric, stat in summary.columns]
+    summary.reset_index().to_csv(
+        os.path.join(out_dir, "structure_topology_summary_by_phi.csv"),
+        index=False,
+    )
 
 
 def run_smoke_pipeline(out_dir: str, n: int = 32, seed: int = 0) -> dict:
@@ -355,4 +422,5 @@ def run_production_pipeline(
     if all_compression_rows:
         pd.concat(all_compression_rows).to_csv(os.path.join(out_dir, "energy_curve.csv"), index=False)
 
+    refresh_structure_topology(out_dir)
     return {"status": "success", "seeds": seeds, "n": n, "max_stage": max_stage}

@@ -83,6 +83,10 @@ Phase A execution record:
 - Output directory: `results_phase_a_N64`
 - Compression relaxation: `relax_dt=0.2` separated from the dynamics timestep, up to 3000 steps with early convergence
 - No Stage 8+ dynamics, phase, or perturbation outputs were generated
+- 2026-06-06 scaling extension: repeated Stages 0-7 with `N=128`, seeds `0,1,2`, and the same 15 `phi_target` values
+- Scaling output directory: `results_phase_a_N128`
+- Topology outputs: `structure_topology_by_phi.csv` and `structure_topology_summary_by_phi.csv` in each result directory
+- Cross-size comparison: `structure_topology_scaling_N64_N128.csv` and `structure_topology_scaling_N64_N128.md`
 
 Correctness gates:
 

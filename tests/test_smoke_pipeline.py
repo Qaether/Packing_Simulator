@@ -8,7 +8,7 @@ from qaether_sim.analysis import run_production_pipeline, run_smoke_pipeline
 from qaether_sim.bulk_dynamics import pressure_off_dynamics
 from qaether_sim.compression import relax
 from qaether_sim.config import ExperimentConfig
-from qaether_sim.contact_graph import build_contact_graph, build_hysteretic_contact_graph
+from qaether_sim.contact_graph import build_contact_graph, build_hysteretic_contact_graph, graph_summary
 from qaether_sim.cycles import primitive_squares, primitive_triangles
 from qaether_sim.geometry import overlap_metrics
 from qaether_sim.initial_conditions import fcc_lattice, hcp_lattice, random_gas
@@ -86,6 +86,22 @@ class QaetherSmokeTests(unittest.TestCase):
         previous = build_contact_graph(state, epsilon_contact=0.02)
         graph = build_hysteretic_contact_graph(state, previous, epsilon_on=0.01, epsilon_off=0.02)
         self.assertEqual(graph.number_of_edges(), 1)
+
+    def test_graph_summary_reports_open_and_cycle_structure(self):
+        import networkx as nx
+
+        graph = nx.Graph()
+        graph.add_nodes_from(range(8))
+        graph.add_edges_from([(0, 1), (1, 2), (3, 4), (4, 5), (5, 3), (5, 6)])
+        summary = graph_summary(graph)
+        self.assertEqual(summary["isolated_nodes"], 1)
+        self.assertEqual(summary["degree1_nodes"], 3)
+        self.assertEqual(summary["degree2_nodes"], 3)
+        self.assertEqual(summary["bridge_edges"], 3)
+        self.assertEqual(summary["cycle_nodes"], 3)
+        self.assertEqual(summary["noncycle_nodes"], 5)
+        self.assertEqual(summary["chain_components"], 1)
+        self.assertEqual(summary["tree_components"], 1)
 
     def test_force_free_state_is_flowing(self):
         import pandas as pd
