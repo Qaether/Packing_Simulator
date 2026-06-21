@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from qaether_sim.analysis import run_production_pipeline, run_smoke_pipeline
+from qaether_sim.analysis import run_production_pipeline, run_smoke_pipeline, run_stage8_pressure_off
 from qaether_sim.bulk_dynamics import pressure_off_dynamics
 from qaether_sim.compression import relax
 from qaether_sim.config import ExperimentConfig
@@ -222,6 +222,19 @@ class QaetherSmokeTests(unittest.TestCase):
             self.assertFalse(os.path.exists(os.path.join(seed_dir, "phase_sweep_by_lambda.csv")))
             self.assertFalse(os.path.exists(os.path.join(seed_dir, "perturbed_pressure_off_summary.csv")))
         self.assertEqual(summary["max_stage"], 7)
+
+    def test_stage8_reuses_phase_a_states(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            phase_a = os.path.join(tmp, "phase_a")
+            stage8 = os.path.join(tmp, "stage8")
+            run_production_pipeline(phase_a, n=24, seeds=[0], smoke=True, max_stage=7)
+            summary = run_stage8_pressure_off(phase_a, stage8, steps=1, snapshot_stride=1)
+            final = os.path.join(stage8, "pressure_off_final_summary.csv")
+            manifest = os.path.join(stage8, "stage8_run_manifest.csv")
+            self.assertTrue(os.path.exists(final))
+            self.assertTrue(os.path.exists(manifest))
+            self.assertEqual(summary["runs"], 6)
+            self.assertEqual(len(__import__("pandas").read_csv(final)), 6)
 
 
 if __name__ == "__main__":

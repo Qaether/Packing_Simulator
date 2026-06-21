@@ -58,7 +58,7 @@ Mark a stage complete only when required outputs exist and smoke/validation chec
 - [x] Stage 5: detect T/O motifs
 - [x] Stage 6: build compression graph/cycle/motif atlas
 - [x] Stage 7: select representative states and HCP/FCC benchmarks
-- [ ] Stage 8: run pressure-off exclusion-only dynamics and time-series analysis
+- [x] Stage 8: run pressure-off exclusion-only dynamics and time-series analysis
 - [ ] Stage 9: run quaternion phase coupling and lambda/phase-seed sweep
 - [ ] Stage 10: run pre-pressure-off small-vibration perturbation sweep
 - [ ] Stage 11: compare baseline, phase-conditioned, perturbed, HCP, and FCC dynamics
@@ -87,6 +87,10 @@ Phase A execution record:
 - Scaling output directory: `results_phase_a_N128`
 - Topology outputs: `structure_topology_by_phi.csv` and `structure_topology_summary_by_phi.csv` in each result directory
 - Cross-size comparison: `structure_topology_scaling_N64_N128.csv` and `structure_topology_scaling_N64_N128.md`
+- 2026-06-06 Stage 8: completed fixed-cell pressure-off baselines for N=64 and N=128
+- Stage 8 outputs: `results_stage8_pressure_off_N64`, `results_stage8_pressure_off_N128`
+- Stage 8 comparison: `stage8_pressure_off_scaling_N64_N128.csv`, `stage8_pressure_off_report.md`
+- Protocol: exclusion-only, no phase or perturbation, `dt=0.01`, 1000 steps, snapshot stride 50
 
 Correctness gates:
 

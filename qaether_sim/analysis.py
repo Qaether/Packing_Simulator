@@ -150,6 +150,123 @@ def refresh_structure_topology(out_dir: str) -> None:
     )
 
 
+def run_stage8_pressure_off(
+    phase_a_dir: str,
+    out_dir: str,
+    steps: int = 1000,
+    snapshot_stride: int = 50,
+) -> dict:
+    from .state import QaetherState
+
+    ensure_dir(out_dir)
+    energy_df = pd.read_csv(os.path.join(phase_a_dir, "energy_curve.csv"))
+    n = int(energy_df["n"].iloc[0])
+    cfg = ExperimentConfig(
+        dt=0.01,
+        dynamics_steps=steps,
+        snapshot_stride=snapshot_stride,
+    )
+
+    run_specs = []
+    seed_dirs = sorted(
+        path for path in os.listdir(phase_a_dir)
+        if path.startswith("seed_") and os.path.isdir(os.path.join(phase_a_dir, path))
+    )
+    for seed_name in seed_dirs:
+        seed = int(seed_name.split("_", 1)[1])
+        seed_dir = os.path.join(phase_a_dir, seed_name)
+        manifest = pd.read_csv(os.path.join(seed_dir, "selected_states_manifest.csv"))
+        for item in manifest.itertuples(index=False):
+            run_specs.append(
+                {
+                    "run_id": f"seed_{seed}_{item.label}",
+                    "seed": seed,
+                    "state_label": item.label,
+                    "source_path": os.path.join(seed_dir, item.path),
+                    "benchmark_type": "random_compressed",
+                }
+            )
+
+    lattice_files = {
+        "hcp": "hcp_state_phi_0.733.h5",
+        "fcc": "fcc_state_phi_0.733.h5",
+        "hcp_toto": "hcp_toto_constructed_state.h5",
+        "fcc_toto": "fcc_toto_constructed_state.h5",
+    }
+    for label, filename in lattice_files.items():
+        run_specs.append(
+            {
+                "run_id": label,
+                "seed": -1,
+                "state_label": label,
+                "source_path": os.path.join(phase_a_dir, filename),
+                "benchmark_type": (
+                    "toto_labeled_constructed" if label.endswith("_toto")
+                    else "ideal_close_packing_reference"
+                ),
+            }
+        )
+
+    all_rows = []
+    final_rows = []
+    manifest_rows = []
+    for spec in run_specs:
+        state = QaetherState.load_h5(spec["source_path"])
+        run_dir = os.path.join(out_dir, spec["run_id"])
+        ensure_dir(run_dir)
+        trajectory_path = os.path.join(run_dir, "pressure_off_trajectory.h5")
+        timeseries_path = os.path.join(run_dir, "pressure_off_timeseries.csv")
+        dynamics_df = pressure_off_dynamics(
+            state,
+            cfg,
+            steps=steps,
+            traj_path=trajectory_path,
+        )
+        dynamics_df.insert(0, "run_id", spec["run_id"])
+        dynamics_df.insert(1, "N", n)
+        dynamics_df.insert(2, "seed", spec["seed"])
+        dynamics_df.insert(3, "state_label", spec["state_label"])
+        dynamics_df.insert(4, "benchmark_type", spec["benchmark_type"])
+        dynamics_df.to_csv(timeseries_path, index=False)
+        all_rows.append(dynamics_df)
+
+        final = dynamics_df.iloc[-1].to_dict()
+        final["source_path"] = os.path.relpath(spec["source_path"], phase_a_dir)
+        final["trajectory_path"] = os.path.relpath(trajectory_path, out_dir)
+        final_rows.append(final)
+        manifest_rows.append(
+            {
+                **spec,
+                "source_path": os.path.relpath(spec["source_path"], phase_a_dir),
+                "timeseries_path": os.path.relpath(timeseries_path, out_dir),
+                "trajectory_path": os.path.relpath(trajectory_path, out_dir),
+            }
+        )
+
+    combined = pd.concat(all_rows, ignore_index=True)
+    combined.to_csv(os.path.join(out_dir, "pressure_off_timeseries.csv"), index=False)
+    pd.DataFrame(final_rows).to_csv(
+        os.path.join(out_dir, "pressure_off_final_summary.csv"),
+        index=False,
+    )
+    pd.DataFrame(manifest_rows).to_csv(
+        os.path.join(out_dir, "stage8_run_manifest.csv"),
+        index=False,
+    )
+    with open(os.path.join(out_dir, "stage8_protocol.md"), "w", encoding="utf-8") as protocol:
+        protocol.write(
+            "# Stage 8 Pressure-off Protocol\n\n"
+            f"- Source: `{phase_a_dir}`\n"
+            f"- N: {n}\n"
+            f"- Integration: overdamped exclusion-only, dt={cfg.dt}, steps={steps}\n"
+            f"- Snapshot stride: {snapshot_stride}\n"
+            "- Contact tracking: hysteretic graph\n"
+            "- No phase coupling and no explicit perturbation\n"
+            "- Hard, unperturbed states are labeled `none`; stressed states are residual-stress relaxation.\n"
+        )
+    return {"status": "success", "N": n, "runs": len(run_specs), "steps": steps}
+
+
 def run_smoke_pipeline(out_dir: str, n: int = 32, seed: int = 0) -> dict:
     ensure_dir(out_dir)
     cfg = ExperimentConfig(

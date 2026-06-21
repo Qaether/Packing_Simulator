@@ -1,0 +1,26 @@
+N,run_id,state_label,dynamics_type,phi,S_E_final,S_T_final,S_O_final,edge_edit_distance_final,MSD_final,initial_edges,initial_T,initial_O
+64,seed_0_jammed,jammed,A. Residual-stress relaxation,0.7400000000000002,1.0,1.0,,0,2.1332292177490267e-11,276,16,0
+64,seed_0_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000002,1.0,1.0,,0,1.8126034393222222e-11,262,11,0
+64,seed_0_random,random,none,0.5800000000000001,1.0,,,0,1.7080066841476236e-11,170,0,0
+64,seed_1_jammed,jammed,A. Residual-stress relaxation,0.7400000000000002,1.0,,,0,1.3765655433614001e-12,272,0,0
+64,seed_1_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000002,1.0,1.0,,0,2.3719765782969983e-11,268,8,0
+64,seed_1_random,random,none,0.5800000000000001,1.0,,,0,2.1072903702218153e-11,172,0,0
+64,seed_2_jammed,jammed,A. Residual-stress relaxation,0.7400000000000002,1.0,1.0,,0,1.1860291544931824e-11,284,14,0
+64,seed_2_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000002,1.0,1.0,,0,2.0681531211763292e-11,259,11,0
+64,seed_2_random,random,none,0.5800000000000001,1.0,,,0,1.9966399354115263e-11,186,0,0
+64,hcp,hcp,none,0.7330756847961302,1.0,1.0,1.0,0,0.0,384,128,48
+64,fcc,fcc,none,0.7330756847961304,1.0,1.0,1.0,0,0.0,384,128,39
+64,hcp_toto,hcp_toto,none,0.740480489693061,1.0,1.0,1.0,0,4.06859120518284e-34,384,128,48
+64,fcc_toto,fcc_toto,none,0.7404804896930608,1.0,1.0,1.0,0,1.3839925173361113e-33,384,128,30
+128,seed_0_jammed,jammed,A. Residual-stress relaxation,0.7399999999999999,1.0,1.0,1.0,0,2.1084659412140273e-11,612,78,2
+128,seed_0_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000001,1.0,1.0,,0,1.9815914491700228e-11,532,22,0
+128,seed_0_random,random,A. Residual-stress relaxation,0.6,1.0,1.0,,2,5.772018555007604e-07,403,1,0
+128,seed_1_jammed,jammed,A. Residual-stress relaxation,0.7399999999999999,1.0,1.0,,0,1.942740456355481e-11,575,37,0
+128,seed_1_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000001,1.0,1.0,,0,2.100668244458378e-11,531,23,0
+128,seed_1_random,random,none,0.6,1.0,1.0,,0,2.1062384688807748e-11,376,3,0
+128,seed_2_frustrated,frustrated,A. Residual-stress relaxation,0.7000000000000001,1.0,1.0,,0,1.9980022205194854e-11,538,34,0
+128,seed_2_random,random,A. Residual-stress relaxation,0.6,1.0,1.0,,0,7.262648978058802e-08,380,3,0
+128,hcp,hcp,none,0.7330756847961302,1.0,1.0,1.0,0,0.0,768,256,13
+128,fcc,fcc,none,0.7330756847961304,1.0,1.0,1.0,0,0.0,768,256,4
+128,hcp_toto,hcp_toto,none,0.740480489693061,1.0,1.0,1.0,0,3.253036910932408e-33,768,256,13
+128,fcc_toto,fcc_toto,none,0.7404804896930608,1.0,1.0,1.0,0,6.670362065887976e-34,768,256,4

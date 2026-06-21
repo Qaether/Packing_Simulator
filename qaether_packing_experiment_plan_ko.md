@@ -58,7 +58,7 @@ Production geometry:
 - [x] Stage 5: T/O motif 검출
 - [x] Stage 6: compression graph/cycle/motif atlas 생성
 - [x] Stage 7: representative state 및 HCP/FCC benchmark 선정
-- [ ] Stage 8: pressure-off exclusion-only dynamics 및 time series 분석
+- [x] Stage 8: pressure-off exclusion-only dynamics 및 time series 분석
 - [ ] Stage 9: quaternion phase coupling 및 lambda/phase-seed sweep
 - [ ] Stage 10: pressure-off 전 small-vibration perturbation sweep
 - [ ] Stage 11: baseline/phase/perturbed/HCP/FCC dynamics 비교
@@ -87,6 +87,10 @@ Phase A 실행 기록:
 - scaling 결과 디렉터리: `results_phase_a_N128`
 - 구조 산출물: 각 결과 디렉터리의 `structure_topology_by_phi.csv`, `structure_topology_summary_by_phi.csv`
 - 크기 비교 산출물: `structure_topology_scaling_N64_N128.csv`, `structure_topology_scaling_N64_N128.md`
+- 2026-06-06 Stage 8: N=64, N=128 fixed-cell pressure-off baseline 완료
+- Stage 8 결과: `results_stage8_pressure_off_N64`, `results_stage8_pressure_off_N128`
+- Stage 8 비교: `stage8_pressure_off_scaling_N64_N128.csv`, `stage8_pressure_off_report.md`
+- protocol: exclusion-only, phase/perturbation 없음, `dt=0.01`, 1000 step, snapshot stride 50
 
 정합성 통과 조건:
 
